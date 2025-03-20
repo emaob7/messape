@@ -21,13 +21,13 @@ import {
   Grading as FinIcon, // Icono para la pestaña "Fin"
 } from '@mui/icons-material';
 import { db } from '../firebaseConfig';
-import { doc, setDoc, deleteDoc} from 'firebase/firestore'; // Importa setDoc, deleteDoc y getDoc
+import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore'; // Importa setDoc, deleteDoc y getDoc
 import DeleteIcon from '@mui/icons-material/Delete'; // Icono para el botón de eliminar
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import html2pdf from 'html2pdf.js'; // Importar html2pdf
 import logo from '../assets/logo.png';
 
-const Form1 = ({ userRole, userName }) => {
+const Form2 = ({ selectedRow, userRole, userName }) => {
   const [formData, setFormData] = useState({
     numero: '',
     fecha: '',
@@ -52,13 +52,19 @@ const Form1 = ({ userRole, userName }) => {
     recepcion2: '',
     observacion: '',
     confidencial: false, // Nuevo campo para indicar si es confidencial
-    userName: userName || '',
   });
 
   const [tabValue, setTabValue] = useState(0);
   const [folio, setFolio] = useState("01");
 
-   
+    // Cargar los datos seleccionados en el formulario
+    useEffect(() => {
+      if (selectedRow) {
+        setFormData(selectedRow);
+      }
+    }, [selectedRow]);
+
+      // Ajustar el valor de `tabValue` cuando cambia el rol
 
   
 
@@ -80,29 +86,24 @@ const Form1 = ({ userRole, userName }) => {
 
 // Función para guardar un registro
 const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    if (!formData.numero || !formData.remitente) {
-      alert('Por favor, completa los campos obligatorios.');
-      return;
-    }
-      // Agregar el nombre del usuario al formulario antes de guardar
-      const formDataWithUser = {
-        ...formData,
-        userName: userName || 'Usuario desconocido', // Asegurar que siempre haya un valor
-      };
-
-      await setDoc(doc(db, 'formularios', formData.numero), formDataWithUser);
+    e.preventDefault();
+    try {
+      if (!formData.numero || !formData.remitente) {
+        alert('Por favor, completa los campos obligatorios.');
+        return;
+      }
+  
+      // Guardar los datos en Firestore sin incluir el campo "userName"
+      await setDoc(doc(db, 'formularios', formData.numero), formData);
       alert('Datos guardados exitosamente');
-
-    // Limpia el formulario
-   limpiar();
-  } catch (error) {
-    console.error('Error al guardar los datos: ', error.message);
-    alert('Hubo un error al guardar los datos: ' + error.message);
-  }
-};
-
+  
+      // Limpiar el formulario
+      limpiar();
+    } catch (error) {
+      console.error('Error al guardar los datos: ', error.message);
+      alert('Hubo un error al guardar los datos: ' + error.message);
+    }
+  };
 // limpiar
 
 const limpiar = () =>{
@@ -130,7 +131,6 @@ const limpiar = () =>{
     recepcion2: '',
     observacion: '',
     confidencial: false, // Nuevo campo para indicar si es confidencial
-    userName: userName || '',
   });
 }
 // Función para eliminar un registro
@@ -766,4 +766,4 @@ const handleDelete = async () => {
   );
 };
 
-export default Form1;
+export default Form2;

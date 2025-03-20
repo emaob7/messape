@@ -11,10 +11,12 @@ import {
   Paper,
   TablePagination,
   Typography,
+  Grid
 } from '@mui/material';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; // Asegúrate de importar tu configuración de Firestore
 import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import ExcelExportButton from '../Components/ExcelExportButton';
 
 const DataView = ({ onRowClick, userRole, userName }) => {
   const navigate = useNavigate(); // Hook para navegación programática
@@ -22,6 +24,7 @@ const DataView = ({ onRowClick, userRole, userName }) => {
   const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
   const [page, setPage] = useState(0); // Página actual
   const [rowsPerPage, setRowsPerPage] = useState(10); // Filas por página
+  const [year, setYear] = useState(new Date().getFullYear()); // Estado para el año seleccionado
 
   // Extraer los datos de Firestore
 // Obtener los datos de Firestore
@@ -71,7 +74,7 @@ useEffect(() => {
     // Manejar clic en una fila
     const handleRowClick = (row) => {
       onRowClick(row); // Pasar los datos al formulario
-      navigate('/form1'); // Navegar al formulario
+      navigate('/form2'); // Navegar al formulario
     };
 
   return (
@@ -80,25 +83,33 @@ useEffect(() => {
         Vista de Datos
       </Typography>
 
-      {/* Campo de búsqueda */}
-      <TextField
-        label="Buscar"
-        variant="outlined"
-        fullWidth
-        margin="normal"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      <Grid container spacing={2}>
+  {/* Campo de búsqueda - Ocupa 8 columnas */}
+  <Grid item xs={12} sm={6}>
+    <TextField
+      label="Buscar"
+      variant="outlined"
+      fullWidth
+      margin="normal"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+  </Grid>
 
+  {/* Botón de exportar a Excel - Ocupa 4 columnas */}
+  <Grid item xs={12} sm={6}>
+    <ExcelExportButton data={data} year={year} setYear={setYear} />
+  </Grid>
+</Grid>
       {/* Tabla de datos */}
       <TableContainer component={Paper}>
-        <Table>
+      <Table sx={{ '& .MuiTableCell-root': { fontSize: '0.875rem', padding: '8px' } }}>
           <TableHead>
             <TableRow>
               <TableCell>Número</TableCell>
               <TableCell>Remitente</TableCell>
               <TableCell>Fecha</TableCell>
-              <TableCell>Descripción</TableCell>
+              <TableCell>Resumen</TableCell>
               <TableCell>Observación</TableCell>
               <TableCell>Usuario</TableCell>
 
@@ -116,7 +127,7 @@ useEffect(() => {
                 <TableCell>{row.numero}</TableCell>
                 <TableCell>{row.remitente}</TableCell>
                 <TableCell>{row.fecha}</TableCell>
-                <TableCell>{row.descripcion}</TableCell>
+                <TableCell sx={{ fontSize: '0.875rem', whiteSpace: 'normal', wordWrap: 'break-word' }}>{row.resumen}</TableCell>
                 <TableCell>{row.observacion}</TableCell>
                 <TableCell>{row.userName}</TableCell>
                 {/* Agrega más celdas según sea necesario */}

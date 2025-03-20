@@ -4,6 +4,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
 import { AppBar, Toolbar, Button, Box } from "@mui/material";
 import Form1 from './Views/Form1';
+import Form2 from './Views/Form2';
 import DownloadExcelButton from './Components/DownloadExcelButton';
 import DataView from './Views/DataView';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -95,6 +96,16 @@ const App = () => {
               path="/form1"
               element={
                   <Form1
+                    userRole={fakeAuth.userRole} // Pasar el rol del usuario
+                    userName={fakeAuth.userName} // Pasar el nombre del usuario
+                  />
+              }
+              
+            />
+            <Route
+              path="/form2"
+              element={
+                  <Form2
                     selectedRow={selectedRow}
                     onCancel={() => setSelectedRow(null)}
                     userRole={fakeAuth.userRole} // Pasar el rol del usuario
