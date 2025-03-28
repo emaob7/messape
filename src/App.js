@@ -28,8 +28,12 @@ const Navigation = ({ setUpdate }) => {
   return (
     <AppBar position="fixed">
       <Toolbar>
-        {/* Mostrar "Cargar Datos" solo para admin y carga */}
-          <Button color="inherit" component={Link} to="/form1">Registrar</Button>
+     
+{fakeAuth.userRole !== 'verificador' && (
+  <Button color="inherit" component={Link} to="/form1">
+    Registrar
+  </Button>
+)}
        
         {/* Mostrar "Cargados" para todos los usuarios */}
         <Button color="inherit" component={Link} to="/datos">Ver Datos</Button>
@@ -39,11 +43,11 @@ const Navigation = ({ setUpdate }) => {
 
 
         {/* {fakeAuth.userRole === 'admin' && <DownloadExcelButton />} */}
-       
+        {fakeAuth.userRole !== 'verificador' && (
           <DownloadExcelButton
           userRole = {fakeAuth.userRole}
           />
-        
+        )}
 
         {/* Botón de logout */}
         <Box sx={{ marginLeft: 'auto' }} />
@@ -91,7 +95,35 @@ const App = () => {
     )
   }
 />
-            {/* Ruta para carga de datos (solo admin y carga) */}
+// En App.js
+<Route
+  path="/form1"
+  element={
+    fakeAuth.userRole === 'verificador' ? (
+      <Navigate to="/datos" replace />
+    ) : (
+      <Form1
+        userRole={fakeAuth.userRole}
+        userName={fakeAuth.userName}
+      />
+    )
+  }
+/>
+
+<Route
+  path="/form2"
+  element={
+    fakeAuth.userRole === 'verificador' ? (
+      <Navigate to="/datos" replace />
+    ) : (
+      <Form2
+        selectedRow={selectedRow}
+        userRole={fakeAuth.userRole}
+        userName={fakeAuth.userName}
+      />
+    )
+  }
+/>
             <Route
               path="/form1"
               element={

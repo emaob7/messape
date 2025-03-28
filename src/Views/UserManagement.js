@@ -135,6 +135,9 @@ const UserManagement = () => {
 <Typography variant="subtitle2" paragraph>
   <strong>c -</strong> El Rol <strong>Carga</strong> solo tendrá acceso a cargar la seccion de inicio y ver los datos cargados y descarga de Excel <strong>sin los datos de Notas Confidenciales.</strong>
 </Typography>
+<Typography variant="subtitle2" paragraph>
+  <strong>c -</strong> El Rol <strong>Verificador</strong> solo tendrá acceso para ver los datos cargados, podra verificar el estado pendiente y finalizado de las notas y descargar un Excel segun el filtro que aplique<strong>sin los datos de Notas Confidenciales.</strong>
+</Typography>
       <Box sx={{ mb: 3 }}>
       <Grid container spacing={2}> 
     <Grid item xs={12} sm={3}> 
@@ -166,6 +169,7 @@ const UserManagement = () => {
           <MenuItem value="admin">Admin</MenuItem>
           <MenuItem value="carga">Carga</MenuItem>
           <MenuItem value="alterno">Alterno</MenuItem>
+          <MenuItem value="verificador">Verificador</MenuItem>
         </Select>
       </FormControl>
     </Grid>

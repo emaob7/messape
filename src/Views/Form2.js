@@ -21,13 +21,13 @@ import {
   Grading as FinIcon, // Icono para la pestaña "Fin"
 } from '@mui/icons-material';
 import { db } from '../firebaseConfig';
-import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore'; // Importa setDoc, deleteDoc y getDoc
+import { doc, setDoc, deleteDoc } from 'firebase/firestore'; // Importa setDoc, deleteDoc y getDoc
 import DeleteIcon from '@mui/icons-material/Delete'; // Icono para el botón de eliminar
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import html2pdf from 'html2pdf.js'; // Importar html2pdf
 import logo from '../assets/logo.png';
 
-const Form2 = ({ selectedRow, userRole, userName }) => {
+const Form2 = ({ selectedRow, userRole }) => {
   const [formData, setFormData] = useState({
     numero: '',
     fecha: '',
@@ -41,7 +41,6 @@ const Form2 = ({ selectedRow, userRole, userName }) => {
     providencia: '',
     recepcion: '',
     ME: '',
-    seguimiento: '',
     docsol: '',
     ndic: '',
     nres: '',
@@ -53,7 +52,7 @@ const Form2 = ({ selectedRow, userRole, userName }) => {
     observacion: '',
     confidencial: false, // Nuevo campo para indicar si es confidencial
   });
-
+  const [userName, setUsername] = useState("01");
   const [tabValue, setTabValue] = useState(0);
   const [folio, setFolio] = useState("01");
 
@@ -61,6 +60,7 @@ const Form2 = ({ selectedRow, userRole, userName }) => {
     useEffect(() => {
       if (selectedRow) {
         setFormData(selectedRow);
+        setUsername(selectedRow.userName)
       }
     }, [selectedRow]);
 
@@ -86,24 +86,35 @@ const Form2 = ({ selectedRow, userRole, userName }) => {
 
 // Función para guardar un registro
 const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (!formData.numero || !formData.remitente) {
-        alert('Por favor, completa los campos obligatorios.');
-        return;
-      }
+  e.preventDefault();
   
-      // Guardar los datos en Firestore sin incluir el campo "userName"
-      await setDoc(doc(db, 'formularios', formData.numero), formData);
-      alert('Datos guardados exitosamente');
+  if (!formData.numero || !formData.remitente) {
+    alert('Complete los campos obligatorios');
+    return;
+  }
+
+  let finalUserName = userName;
   
-      // Limpiar el formulario
-      limpiar();
-    } catch (error) {
-      console.error('Error al guardar los datos: ', error.message);
-      alert('Hubo un error al guardar los datos: ' + error.message);
+  if (!finalUserName || finalUserName.trim() === "") {
+    const input = window.prompt("Por favor ingresa el nombre del usuario que cargo esta nota en MAYÚSCULAS:");
+    if (!input || input.trim() === "") {
+      alert('Debes ingresar un nombre de usuario');
+      return;
     }
-  };
+    finalUserName = input.toUpperCase();
+  }
+
+  try {
+    await setDoc(doc(db, 'formularios', formData.numero), {
+      ...formData,
+      userName: finalUserName
+    });
+    alert('Guardado exitoso');
+    limpiar();
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+};
 // limpiar
 
 const limpiar = () =>{
@@ -120,7 +131,6 @@ const limpiar = () =>{
     providencia: '',
     recepcion: '',
     ME: '',
-    seguimiento: '',
     docsol: '',
     ndic: '',
     nres: '',
@@ -556,14 +566,15 @@ const handleDelete = async () => {
           <MenuItem value=""></MenuItem>
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
-          <MenuItem value="Resolucion">Resolución</MenuItem>
+          <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
+          <MenuItem value="Resolución Consejo Superior">Resolución Consejo Superior</MenuItem>
           <MenuItem value="Convenio">Convenio</MenuItem>
         </Select>
       </FormControl>
     </Grid>
     <Grid item xs={12} md={3}>
       <TextField
-        label="Numero Dictamen"
+        label="Numero de Documento"
         name="ndic"
         value={formData.ndic}
         onChange={handleChange}
@@ -583,14 +594,15 @@ const handleDelete = async () => {
           <MenuItem value=""></MenuItem>
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
-          <MenuItem value="Resolucion">Resolución</MenuItem>
+          <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
+          <MenuItem value="Resolución Consejo Superior">Resolución Consejo Superior</MenuItem>
           <MenuItem value="Convenio">Convenio</MenuItem>
         </Select>
       </FormControl>
     </Grid>
     <Grid item xs={12} md={3}>
       <TextField
-        label="Numero Resolucion"
+        label="Numero de Documento"
         name="nres"
         value={formData.nres}
         onChange={handleChange}
@@ -602,8 +614,8 @@ const handleDelete = async () => {
       <FormControl fullWidth margin="normal">
         <InputLabel>Seguimiento</InputLabel>
         <Select
-          name="seguimiento"
-          value={formData.seguimiento}
+          name="estado"
+          value={formData.estado}
           onChange={handleChange}
         >
           <MenuItem value="">

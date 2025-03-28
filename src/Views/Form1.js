@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import {
   Container,
   TextField,
@@ -41,7 +41,6 @@ const Form1 = ({ userRole, userName }) => {
     providencia: '',
     recepcion: '',
     ME: '',
-    seguimiento: '',
     docsol: '',
     ndic: '',
     nres: '',
@@ -119,7 +118,6 @@ const limpiar = () =>{
     providencia: '',
     recepcion: '',
     ME: '',
-    seguimiento: '',
     docsol: '',
     ndic: '',
     nres: '',
@@ -556,14 +554,15 @@ const handleDelete = async () => {
           <MenuItem value=""></MenuItem>
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
-          <MenuItem value="Resolucion">Resolución</MenuItem>
+          <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
+          <MenuItem value="Resolución Consejo Superior">Resolución Consejo Superior</MenuItem>
           <MenuItem value="Convenio">Convenio</MenuItem>
         </Select>
       </FormControl>
     </Grid>
     <Grid item xs={12} md={3}>
       <TextField
-        label="Numero Dictamen"
+        label="Numero de Documento"
         name="ndic"
         value={formData.ndic}
         onChange={handleChange}
@@ -583,14 +582,15 @@ const handleDelete = async () => {
           <MenuItem value=""></MenuItem>
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
-          <MenuItem value="Resolucion">Resolución</MenuItem>
+          <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
+          <MenuItem value="Resolución Consejo Superior">Resolución Consejo Superior</MenuItem>
           <MenuItem value="Convenio">Convenio</MenuItem>
         </Select>
       </FormControl>
     </Grid>
     <Grid item xs={12} md={3}>
       <TextField
-        label="Numero Resolucion"
+        label="Numero de Documento"
         name="nres"
         value={formData.nres}
         onChange={handleChange}
@@ -602,8 +602,8 @@ const handleDelete = async () => {
       <FormControl fullWidth margin="normal">
         <InputLabel>Seguimiento</InputLabel>
         <Select
-          name="seguimiento"
-          value={formData.seguimiento}
+          name="estado"
+          value={formData.estado}
           onChange={handleChange}
         >
           <MenuItem value="">
