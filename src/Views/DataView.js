@@ -65,8 +65,8 @@ useEffect(() => {
   
     const statusConsideredPending = [undefined, null, '', 'pendiente'];
     const matchesStatus = statusFilter === 'todos' || 
-                         (statusFilter === 'pendiente' && (!row.estado || statusConsideredPending.includes(row.estado))) ||
-                         (statusFilter === 'finalizado' && row.estado === 'finalizado');
+                         (statusFilter === 'pendiente' && (!row.seguimiento || statusConsideredPending.includes(row.seguimiento))) ||
+                         (statusFilter === 'finalizado' && row.seguimiento === 'finalizado');
   
   // Filtro por confidencialidad
   const matchesConfidentiality = userRole === 'admin' || !row.confidencial;
@@ -95,7 +95,7 @@ useEffect(() => {
     // Manejar clic en una fila
 const handleRowClick = (row) => {
   onRowClick({ ...row, userName: row.userName }); // Pasar los datos al formulario, incluyendo userName
-  navigate('/form2'); // Navegar al formulario form1
+  navigate('/form2'); // Navegar al formulario form2
 };
 
   return (
@@ -144,10 +144,10 @@ const handleRowClick = (row) => {
   
   <Grid item xs={12} sm={2}>
   <FormControl fullWidth>
-    <InputLabel>Estado</InputLabel>
+    <InputLabel>Seguimiento</InputLabel>
     <Select
       value={statusFilter}
-      label="Estado"
+      label="Seguimiento"
       onChange={(e) => setStatusFilter(e.target.value)}
       disabled={!(userRole === 'admin' || userRole === 'verificador')}
     >
@@ -189,8 +189,8 @@ const handleRowClick = (row) => {
             sx={{
               cursor: 'pointer',
               borderLeft: 
-                !row.estado || row.estado === 'pendiente' ? '4px solid #FFA726' :
-                row.estado === 'finalizado' ? '4px solid #66BB6A' :
+                !row.seguimiento || row.seguimiento === 'pendiente' ? '4px solid #FFA726' :
+                row.seguimiento === 'finalizado' ? '4px solid #66BB6A' :
                 row.confidencial ? '4px solid #42A5F5' : 'none',
               backgroundColor: row.confidencial ? '#b3e5fc' : 'inherit',
             }}

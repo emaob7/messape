@@ -37,6 +37,7 @@ const Form1 = ({ userRole, userName }) => {
     fechaRecepcion: '',
     descripcion: '',
     estado: '',
+    seguimiento:'',
     destinatarios: '',
     providencia: '',
     recepcion: '',
@@ -114,6 +115,7 @@ const limpiar = () =>{
     fechaRecepcion: '',
     descripcion: '',
     estado: '',
+    seguimiento:'',
     destinatarios: '',
     providencia: '',
     recepcion: '',
@@ -371,6 +373,7 @@ const handleDelete = async () => {
       <Typography variant="h6" gutterBottom>
         Registro de Mesas de Entradas
       </Typography>
+
       <Tabs value={tabValue} onChange={handleTabChange}>
       <Tab
           label={
@@ -404,6 +407,7 @@ const handleDelete = async () => {
 
 
       </Tabs>
+      
       <form onSubmit={handleSubmit}>
       <Box hidden={tabValue !== 0}>
   <Grid container spacing={3}>
@@ -602,8 +606,8 @@ const handleDelete = async () => {
       <FormControl fullWidth margin="normal">
         <InputLabel>Seguimiento</InputLabel>
         <Select
-          name="estado"
-          value={formData.estado}
+          name="seguimiento"
+          value={formData.seguimiento}
           onChange={handleChange}
         >
           <MenuItem value="">

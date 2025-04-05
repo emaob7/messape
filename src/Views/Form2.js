@@ -37,6 +37,7 @@ const Form2 = ({ selectedRow, userRole }) => {
     fechaRecepcion: '',
     descripcion: '',
     estado: '',
+    seguimiento:'',
     destinatarios: '',
     providencia: '',
     recepcion: '',
@@ -127,6 +128,7 @@ const limpiar = () =>{
     fechaRecepcion: '',
     descripcion: '',
     estado: '',
+    seguimiento:'',
     destinatarios: '',
     providencia: '',
     recepcion: '',
@@ -614,8 +616,8 @@ const handleDelete = async () => {
       <FormControl fullWidth margin="normal">
         <InputLabel>Seguimiento</InputLabel>
         <Select
-          name="estado"
-          value={formData.estado}
+          name="seguimiento"
+          value={formData.seguimiento}
           onChange={handleChange}
         >
           <MenuItem value="">

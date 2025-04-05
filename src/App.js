@@ -35,11 +35,7 @@ const Navigation = ({ setUpdate }) => {
   </Button>
 )}
        
-        {/* Mostrar "Cargados" para todos los usuarios */}
         <Button color="inherit" component={Link} to="/datos">Ver Datos</Button>
-
-      
-
 
 
         {/* {fakeAuth.userRole === 'admin' && <DownloadExcelButton />} */}
@@ -86,16 +82,16 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/form1" />} />
             <Route
-  path="/gestion-usuarios"
-  element={
-    fakeAuth.userRole === 'admin' ? (
-      <UserManagement />
-    ) : (
-      <Navigate to="/form1" />
-    )
-  }
-/>
-// En App.js
+             path="/gestion-usuarios"
+              element={
+              fakeAuth.userRole === 'admin' ? (
+               <UserManagement />
+                ) : (
+                <Navigate to="/form1" />
+                )
+                }
+                />
+
 <Route
   path="/form1"
   element={
@@ -156,7 +152,6 @@ const App = () => {
                 />
               }
             />
-            {/* Ruta para otros tabs (solo admin y no-upload) */}
            
             <Route path="*" element={<Navigate to="/form1" />} />
           </Routes>

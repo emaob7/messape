@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { Button} from '@mui/material';
 
 const ExcelExportButton = ({ data }) => {
+  
   const handleExport = () => {
     if (data.length === 0) {
       alert('No hay datos para exportar');
