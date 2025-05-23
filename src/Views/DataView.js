@@ -21,7 +21,9 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; // Asegúrate de importar tu configuración de Firestore
 import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 import ExcelExportButton from '../Components/ExcelExportButton';
+import PDFExportButton from '../Components/PDFExportButton';
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 const DataView = ({ onRowClick, userRole, userName }) => {
   const navigate = useNavigate(); // Hook para navegación programática
   const [data, setData] = useState([]); // Datos extraídos de Firestore
@@ -61,7 +63,7 @@ useEffect(() => {
   
   // Filtro por año
   const matchesYear = !yearFilter || 
-    new Date(row.fecha).getFullYear() === parseInt(yearFilter, 10);
+    new Date(row.fecha).getFullYear() === Number.parseInt(yearFilter, 10);
   
     const statusConsideredPending = [undefined, null, '', 'pendiente'];
     const matchesStatus = statusFilter === 'todos' || 
@@ -81,7 +83,7 @@ useEffect(() => {
 
   // Cambiar el número de filas por página
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(Number.parseInt(event.target.value, 10));
     setPage(0);
   };
 
@@ -94,7 +96,7 @@ useEffect(() => {
 
     // Manejar clic en una fila
 const handleRowClick = (row) => {
-  onRowClick({ ...row, userName: row.userName }); // Pasar los datos al formulario, incluyendo userName
+  onRowClick({ ...row, userName2: row.userName }); // Pasar los datos al formulario, incluyendo userName
   navigate('/form2'); // Navegar al formulario form2
 };
 
@@ -106,7 +108,7 @@ const handleRowClick = (row) => {
 
       <Grid container spacing={2}>
   {/* Búsqueda general */}
-  <Grid item xs={12} sm={6}>
+  <Grid item xs={12} sm={4}>
     <TextField
       label="Buscar"
       variant="outlined"
@@ -163,6 +165,9 @@ const handleRowClick = (row) => {
     <ExcelExportButton 
       data={filteredData} // Pasamos los datos ya filtrados
     />
+  </Grid>
+   <Grid item xs={12} sm={2}>
+  <PDFExportButton data={filteredData} userRole={userRole}/>
   </Grid>
 </Grid>
       {/* Tabla de datos */}

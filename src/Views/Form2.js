@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   TextField,
@@ -27,7 +27,7 @@ import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import html2pdf from 'html2pdf.js'; // Importar html2pdf
 import logo from '../assets/logo.png';
 
-const Form2 = ({ selectedRow, userRole }) => {
+const Form2 = ({ selectedRow, userRole,userName2 }) => {
   const [formData, setFormData] = useState({
     numero: '',
     fecha: '',
@@ -51,6 +51,7 @@ const Form2 = ({ selectedRow, userRole }) => {
     dependencia: '',
     recepcion2: '',
     observacion: '',
+    userName2: userName2, // o null
     confidencial: false, // Nuevo campo para indicar si es confidencial
   });
   const [userName, setUsername] = useState("01");
@@ -106,14 +107,27 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    await setDoc(doc(db, 'formularios', formData.numero), {
+    // Crear objeto con todos los campos necesarios
+    const dataToSave = {
       ...formData,
-      userName: finalUserName
+      userName: finalUserName,
+      userName2: userName2 || null, // Asegurar que userName2 tenga valor (aunque sea null)
+      lastModified: new Date().toISOString()
+    };
+
+    // Eliminar campos undefined explícitamente
+    // biome-ignore lint/complexity/noForEach: <explanation>
+        Object.keys(dataToSave).forEach(key => {
+      if (dataToSave[key] === undefined) {
+        dataToSave[key] = null;
+      }
     });
+
+    await setDoc(doc(db, 'formularios', formData.numero), dataToSave);
     alert('Guardado exitoso');
     limpiar();
   } catch (error) {
-    alert('Error: ' + error.message);
+    alert(`Error: ${error.message}`);
   }
 };
 // limpiar
@@ -166,7 +180,7 @@ const handleDelete = async () => {
     limpiar();
   } catch (error) {
     console.error('Error al eliminar el registro: ', error.message);
-    alert('Hubo un error al eliminar el registro: ' + error.message);
+    alert(`Hubo un error al eliminar el registro: ${error.message}`);
   }
 };
 
@@ -565,7 +579,7 @@ const handleDelete = async () => {
           value={formData.docsol}
           onChange={handleChange}
         >
-          <MenuItem value=""></MenuItem>
+          <MenuItem value="" />
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
           <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
@@ -593,7 +607,7 @@ const handleDelete = async () => {
           value={formData.docsol2}
           onChange={handleChange}
         >
-          <MenuItem value=""></MenuItem>
+          <MenuItem value="" />
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
           <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
@@ -666,7 +680,7 @@ const handleDelete = async () => {
           value={formData.estado}
           onChange={handleChange}
         >
-          <MenuItem value="Pendiente"></MenuItem>
+          <MenuItem value="Pendiente" />
           <MenuItem value="pendiente">Pendiente</MenuItem>
           <MenuItem value="finalizado">Finalizado</MenuItem>
         </Select>

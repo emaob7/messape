@@ -25,7 +25,8 @@ const DownloadExcelButton = ({userRole}) => {
       // Filtrar los datos según el rol del usuario
       if (userRole === 'admin') {
         // Si es admin, descargar todos los datos (incluidos los confidenciales)
-        data = data; // No se filtra nada
+        // biome-ignore lint/correctness/noSelfAssign: <explanation>
+                data = data; // No se filtra nada
       } else {
         // Si no es admin, descargar solo los datos no confidenciales
         data = data.filter((row) => !row.confidencial);
@@ -62,7 +63,7 @@ const DownloadExcelButton = ({userRole}) => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error al descargar los datos: ', error.message);
-      alert('Hubo un error al descargar los datos: ' + error.message);
+      alert(`Hubo un error al descargar los datos: ${error.message}`);
     }
   };
 

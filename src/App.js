@@ -6,6 +6,7 @@ import { AppBar, Toolbar, Button, Box } from "@mui/material";
 import Form1 from './Views/Form1';
 import Form2 from './Views/Form2';
 import DownloadExcelButton from './Components/DownloadExcelButton';
+// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import DataView from './Views/DataView';
 import LogoutIcon from '@mui/icons-material/Logout';
 import UserManagement from './Views/UserManagement';
@@ -52,13 +53,13 @@ const Navigation = ({ setUpdate }) => {
     Gestión de Usuarios
   </Button>
 )}
-        <Button
-          color="inherit"
-          endIcon={<LogoutIcon/>}
-          onClick={() => fakeAuth.logout(navigate, setUpdate)} // Pasar `setUpdate` como argumento
-        >
-          Salir
-        </Button>
+       <Button
+  color="inherit"
+  endIcon={<LogoutIcon/>}
+  onClick={() => fakeAuth.logout()} // Sin parámetros
+>
+  Salir
+</Button>
       </Toolbar>
     </AppBar>
   );
@@ -115,7 +116,7 @@ const App = () => {
       <Form2
         selectedRow={selectedRow}
         userRole={fakeAuth.userRole}
-        userName={fakeAuth.userName}
+        userName2={fakeAuth.userName}
       />
     )
   }

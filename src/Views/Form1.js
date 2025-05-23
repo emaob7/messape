@@ -99,7 +99,7 @@ const handleSubmit = async (e) => {
    limpiar();
   } catch (error) {
     console.error('Error al guardar los datos: ', error.message);
-    alert('Hubo un error al guardar los datos: ' + error.message);
+    alert(`Hubo un error al guardar los datos: ${error.message}`);
   }
 };
 
@@ -154,7 +154,7 @@ const handleDelete = async () => {
     limpiar();
   } catch (error) {
     console.error('Error al eliminar el registro: ', error.message);
-    alert('Hubo un error al eliminar el registro: ' + error.message);
+    alert(`Hubo un error al eliminar el registro: ${error.message}`);
   }
 };
 
@@ -555,7 +555,7 @@ const handleDelete = async () => {
           value={formData.docsol}
           onChange={handleChange}
         >
-          <MenuItem value=""></MenuItem>
+          <MenuItem value="" />
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
           <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
@@ -583,7 +583,7 @@ const handleDelete = async () => {
           value={formData.docsol2}
           onChange={handleChange}
         >
-          <MenuItem value=""></MenuItem>
+          <MenuItem value="" />
           <MenuItem value="Dictamen">Dictamen</MenuItem>
           <MenuItem value="Dictamen Conjunto">Dictamen Conjunto</MenuItem>
           <MenuItem value="Resolución Rectorado">Resolución Rectorado</MenuItem>
@@ -656,7 +656,7 @@ const handleDelete = async () => {
           value={formData.estado}
           onChange={handleChange}
         >
-          <MenuItem value="Pendiente"></MenuItem>
+          <MenuItem value="Pendiente" />
           <MenuItem value="pendiente">Pendiente</MenuItem>
           <MenuItem value="finalizado">Finalizado</MenuItem>
         </Select>
