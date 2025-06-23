@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Container,
   TextField,
@@ -15,77 +15,94 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Select
-} from '@mui/material';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../firebaseConfig'; // Asegúrate de importar tu configuración de Firestore
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
-import ExcelExportButton from '../Components/ExcelExportButton';
-import PDFExportButton from '../Components/PDFExportButton';
+  Select,
+} from "@mui/material";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { useNavigate } from "react-router-dom";
+import ExcelExportButton from "../Components/ExcelExportButton";
+import PDFExportButton from "../Components/PDFExportButton";
 
-// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 const DataView = ({ onRowClick, userRole, userName }) => {
-  const navigate = useNavigate(); // Hook para navegación programática
-  const [data, setData] = useState([]); // Datos extraídos de Firestore
-  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
-  const [page, setPage] = useState(0); // Página actual
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Filas por página
-  const [yearFilter, setYearFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('todos');
+  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [yearFilter, setYearFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear().toString()
+  ); // Año actual por defecto
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Extraer los datos de Firestore
-// Obtener los datos de Firestore
-useEffect(() => {
+  // Obtener los datos de Firestore según el año seleccionado
+  useEffect(() => {
+    fetchData();
+  }, [userRole, selectedYear]);
+
   const fetchData = async () => {
-    const q = query(collection(db, 'formularios'), orderBy('numero', "desc"));
-    const querySnapshot = await getDocs(q);
-    const fetchedData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setIsLoading(true);
+    try {
+      // Usamos la colección correspondiente al año seleccionado
+      const q = query(collection(db, selectedYear), orderBy("numero", "desc"));
+      const querySnapshot = await getDocs(q);
+      const fetchedData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    // Filtrar los datos si el usuario no es admin
-    if (userRole !== 'admin') {
-      const filteredData = fetchedData.filter((row) => !row.confidencial);
-      setData(filteredData);
-    } else {
-      setData(fetchedData);
+      // Filtrar los datos si el usuario no es admin
+      if (userRole !== "admin") {
+        const filteredData = fetchedData.filter((row) => !row.confidencial);
+        setData(filteredData);
+      } else {
+        setData(fetchedData);
+      }
+    } catch (error) {
+      console.error("Error fetching data: ", error);
+      setData([]); // En caso de error, establecer datos vacíos
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  fetchData();
-}, [userRole]);
+  // Función para manejar el cambio de año
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+  };
 
- // Función de filtrado unificada
- const filteredData = data.filter((row) => {
-  // Filtro por búsqueda general
-  const matchesSearch = searchTerm === '' || 
-    Object.values(row).some(value => 
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+  // Función para actualizar manualmente los datos
+  const handleRefresh = () => {
+    fetchData();
+  };
+
+  // Función de filtrado unificada
+  const filteredData = data.filter((row) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      Object.values(row).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+    const matchesYear =
+      !yearFilter ||
+      new Date(row.fecha).getFullYear() === Number.parseInt(yearFilter, 10);
+
+    const statusConsideredPending = [undefined, null, "", "pendiente"];
+    const matchesStatus =
+      statusFilter === "todos" ||
+      (statusFilter === "pendiente" &&
+        (!row.seguimiento ||
+          statusConsideredPending.includes(row.seguimiento))) ||
+      (statusFilter === "finalizado" && row.seguimiento === "finalizado");
+
+    const matchesConfidentiality = userRole === "admin" || !row.confidencial;
+
+    return (
+      matchesSearch && matchesYear && matchesStatus && matchesConfidentiality
     );
-  
-  // Filtro por año
-  const matchesYear = !yearFilter || 
-    new Date(row.fecha).getFullYear() === Number.parseInt(yearFilter, 10);
-  
-    const statusConsideredPending = [undefined, null, '', 'pendiente'];
-    const matchesStatus = statusFilter === 'todos' || 
-                         (statusFilter === 'pendiente' && (!row.seguimiento || statusConsideredPending.includes(row.seguimiento))) ||
-                         (statusFilter === 'finalizado' && row.seguimiento === 'finalizado');
-  
-  // Filtro por confidencialidad
-  const matchesConfidentiality = userRole === 'admin' || !row.confidencial;
-  
-  return matchesSearch && matchesYear && matchesStatus && matchesConfidentiality;
-});
-
-  // Cambiar de página
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  // Cambiar el número de filas por página
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(Number.parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  });
 
   // Calcular los datos paginados
   const paginatedData = filteredData.slice(
@@ -93,86 +110,119 @@ useEffect(() => {
     page * rowsPerPage + rowsPerPage
   );
 
+  // Resto de las funciones permanecen igual...
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
-    // Manejar clic en una fila
-const handleRowClick = (row) => {
-  onRowClick({ ...row, userName2: row.userName }); // Pasar los datos al formulario, incluyendo userName
-  navigate('/form2'); // Navegar al formulario form2
-};
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(Number.parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleRowClick = (row) => {
+    onRowClick({ ...row, userName2: row.userName });
+    navigate("/form2");
+  };
 
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
-        Vista de Datos
+        Vista de Datos - {selectedYear}
       </Typography>
 
-      <Grid container spacing={2}>
-  {/* Búsqueda general */}
-  <Grid item xs={12} sm={4}>
-    <TextField
-      label="Buscar"
-      variant="outlined"
-      fullWidth
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  </Grid>
-  
-   {/* Filtro por año - Versión mejorada */}
-   <Grid item xs={12} sm={2}>
-    <TextField
-      label="Año"
-      type="number"
-      fullWidth
-      value={yearFilter || new Date().getFullYear()}
-      onChange={(e) => setYearFilter(e.target.value)}
-      InputProps={{
-        inputProps: { 
-          min: 2000, 
-          max: new Date().getFullYear() + 1,
-        },
-      }}
-      sx={{
-        '& input[type=number]': {
-          '-moz-appearance': 'textfield',
-        },
-        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-          '-webkit-appearance': 'none',
-          margin: 0,
-        },
-      }}
-    />
-  </Grid>
-  
-  <Grid item xs={12} sm={2}>
-  <FormControl fullWidth>
-    <InputLabel>Seguimiento</InputLabel>
-    <Select
-      value={statusFilter}
-      label="Seguimiento"
-      onChange={(e) => setStatusFilter(e.target.value)}
-      disabled={!(userRole === 'admin' || userRole === 'verificador')}
-    >
-      <MenuItem value="todos">Todos</MenuItem>
-      <MenuItem value="pendiente">Pendiente</MenuItem>
-      <MenuItem value="finalizado">Finalizado</MenuItem>
-    </Select>
-  </FormControl>
-</Grid>
-  
-  {/* Botón exportar */}
-  <Grid item xs={12} sm={2}>
-    <ExcelExportButton 
-      data={filteredData} // Pasamos los datos ya filtrados
-    />
-  </Grid>
-   <Grid item xs={12} sm={2}>
-  <PDFExportButton data={filteredData} userRole={userRole}/>
-  </Grid>
-</Grid>
+      <Grid container spacing={2} alignItems="center">
+        {/* Botón de actualización 
+        <Grid item xs={12} sm={1}>
+          <IconButton
+            onClick={handleRefresh}
+            color="primary"
+            aria-label="actualizar"
+            disabled={isLoading}
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Grid>
+        */}
+
+        {/* Búsqueda general */}
+        <Grid item xs={12} sm={4}>
+          <TextField
+            label="Buscar"
+            variant="outlined"
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Grid>
+
+        {/* Selector de colección por año */}
+        <Grid item xs={12} sm={2}>
+          <FormControl fullWidth>
+            <InputLabel>Colección</InputLabel>
+            <Select
+              value={selectedYear}
+              onChange={handleYearChange}
+              label="Colección"
+            >
+              {[
+                2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034,
+                2035,
+              ].map((year) => (
+                <MenuItem key={year} value={year.toString()}>
+                  {year}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} sm={2}>
+          <FormControl fullWidth>
+            <InputLabel>Seguimiento</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Seguimiento"
+              onChange={(e) => setStatusFilter(e.target.value)}
+              disabled={!(userRole === "admin" || userRole === "verificador")}
+            >
+              <MenuItem value="todos">Todos</MenuItem>
+              <MenuItem value="pendiente">Pendiente</MenuItem>
+              <MenuItem value="finalizado">Finalizado</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        {/* Botón exportar */}
+        <Grid item xs={12} sm={2}>
+          <ExcelExportButton
+            data={filteredData}
+            fileName={`datos-${selectedYear}`}
+          />
+        </Grid>
+        <Grid item xs={12} sm={2}>
+          <PDFExportButton
+            data={filteredData}
+            userRole={userRole}
+            fileName={`reporte-${selectedYear}`}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Indicador de carga */}
+      {isLoading && (
+        <Typography variant="body1" sx={{ my: 2 }}>
+          Cargando datos...
+        </Typography>
+      )}
+
       {/* Tabla de datos */}
-      <TableContainer component={Paper}>
-      <Table sx={{ '& .MuiTableCell-root': { fontSize: '0.875rem', padding: '8px' } }}>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Table
+          sx={{
+            "& .MuiTableCell-root": { fontSize: "0.875rem", padding: "8px" },
+          }}
+        >
           <TableHead>
             <TableRow>
               <TableCell>Número</TableCell>
@@ -181,32 +231,41 @@ const handleRowClick = (row) => {
               <TableCell>Resumen</TableCell>
               <TableCell>Observación</TableCell>
               <TableCell>Usuario</TableCell>
-
-              {/* Agrega más columnas según sea necesario */}
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedData.map((row) => (
-            <TableRow
-            key={row.numero}
-            hover
-            onClick={() => handleRowClick(row)}
-            sx={{
-              cursor: 'pointer',
-              borderLeft: 
-                !row.seguimiento || row.seguimiento === 'pendiente' ? '4px solid #FFA726' :
-                row.seguimiento === 'finalizado' ? '4px solid #66BB6A' :
-                row.confidencial ? '4px solid #42A5F5' : 'none',
-              backgroundColor: row.confidencial ? '#b3e5fc' : 'inherit',
-            }}
-          >
+              <TableRow
+                key={row.numero}
+                hover
+                onClick={() => handleRowClick(row)}
+                sx={{
+                  cursor: "pointer",
+                  borderLeft:
+                    !row.seguimiento || row.seguimiento === "pendiente"
+                      ? "4px solid #FFA726"
+                      : row.seguimiento === "finalizado"
+                      ? "4px solid #66BB6A"
+                      : row.confidencial
+                      ? "4px solid #42A5F5"
+                      : "none",
+                  backgroundColor: row.confidencial ? "#b3e5fc" : "inherit",
+                }}
+              >
                 <TableCell>{row.numero}</TableCell>
                 <TableCell>{row.remitente}</TableCell>
                 <TableCell>{row.fecha}</TableCell>
-                <TableCell sx={{ fontSize: '0.875rem', whiteSpace: 'normal', wordWrap: 'break-word' }}>{row.resumen}</TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: "0.875rem",
+                    whiteSpace: "normal",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  {row.resumen}
+                </TableCell>
                 <TableCell>{row.observacion}</TableCell>
                 <TableCell>{row.userName}</TableCell>
-                {/* Agrega más celdas según sea necesario */}
               </TableRow>
             ))}
           </TableBody>

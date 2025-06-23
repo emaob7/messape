@@ -1,11 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /formularios/{formularioId} {
-      allow read, write: if true;
-    }
+    
+    // Acceso público a la colección users
     match /users/{userId} {
       allow read, write: if true;
+    }
+
+    // Acceso público a colecciones por año de 2024 a 2040
+    match /{year}/{documentId} {
+      allow read, write: if year in ["2024", "2025", "2026", "2027", "2028", "2029", "2030", 
+                                     "2031", "2032", "2033", "2034", "2035", "2036", "2037", 
+                                     "2038", "2039", "2040"];
     }
   }
 }
