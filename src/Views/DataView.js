@@ -16,16 +16,32 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Button,
+  IconButton,
 } from "@mui/material";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import ExcelExportButton from "../Components/ExcelExportButton";
 import PDFExportButton from "../Components/PDFExportButton";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { openDB } from "idb";
+
+// Configuración de IndexedDB
+const setupLocalDB = async () => {
+  return openDB("firestoreCache", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("documents")) {
+        db.createObjectStore("documents", { keyPath: ["year", "numero"] });
+      }
+    },
+  });
+};
 
 const DataView = ({ onRowClick, userRole, userName }) => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
+  const [localData, setLocalData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -33,47 +49,80 @@ const DataView = ({ onRowClick, userRole, userName }) => {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString()
-  ); // Año actual por defecto
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [usingCache, setUsingCache] = useState(true);
+  const [needsUpdate, setNeedsUpdate] = useState(false);
 
-  // Obtener los datos de Firestore según el año seleccionado
+  // Cargar datos locales al inicio
   useEffect(() => {
-    fetchData();
-  }, [userRole, selectedYear]);
+    const loadLocalData = async () => {
+      try {
+        const localDB = await setupLocalDB();
+        const allCachedData = await localDB.getAll("documents");
+        const yearData = allCachedData.filter(
+          (doc) => doc.year === selectedYear
+        );
 
+        setLocalData(yearData);
+        if (yearData.length > 0) {
+          setData(yearData);
+        } else {
+          setUsingCache(false);
+          fetchData();
+        }
+      } catch (error) {
+        console.error("Error loading local data:", error);
+        fetchData();
+      }
+    };
+
+    loadLocalData();
+  }, [selectedYear]);
+
+  // Obtener los datos de Firestore
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Usamos la colección correspondiente al año seleccionado
       const q = query(collection(db, selectedYear), orderBy("numero", "desc"));
       const querySnapshot = await getDocs(q);
       const fetchedData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
+        year: selectedYear,
         ...doc.data(),
       }));
 
+      // Guardar en caché local
+      const localDB = await setupLocalDB();
+      const tx = localDB.transaction("documents", "readwrite");
+
+      fetchedData.forEach((doc) => {
+        tx.store.put(doc);
+      });
+
+      await tx.done;
+
       // Filtrar los datos si el usuario no es admin
-      if (userRole !== "admin") {
-        const filteredData = fetchedData.filter((row) => !row.confidencial);
-        setData(filteredData);
-      } else {
-        setData(fetchedData);
-      }
+      const finalData =
+        userRole !== "admin"
+          ? fetchedData.filter((row) => !row.confidencial)
+          : fetchedData;
+
+      setData(finalData);
+      setLocalData(finalData);
+      setUsingCache(false);
+      setNeedsUpdate(false);
     } catch (error) {
       console.error("Error fetching data: ", error);
-      setData([]); // En caso de error, establecer datos vacíos
+      setData([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Función para manejar el cambio de año
-  const handleYearChange = (e) => {
-    setSelectedYear(e.target.value);
-  };
-
-  // Función para actualizar manualmente los datos
-  const handleRefresh = () => {
+  // Función para forzar actualización desde Firestore
+  const handleForceRefresh = () => {
+    setUsingCache(false);
     fetchData();
   };
 
@@ -105,12 +154,12 @@ const DataView = ({ onRowClick, userRole, userName }) => {
   });
 
   // Calcular los datos paginados
-  const paginatedData = filteredData.slice(
+  const sortedData = filteredData.sort((a, b) => b.numero - a.numero);
+  const paginatedData = sortedData.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
-  // Resto de las funciones permanecen igual...
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -125,28 +174,20 @@ const DataView = ({ onRowClick, userRole, userName }) => {
     navigate("/form2");
   };
 
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+    setPage(0);
+  };
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
-        Vista de Datos - {selectedYear}
+        Vista de Datos - {selectedYear} {usingCache && "💾"}
       </Typography>
 
       <Grid container spacing={2} alignItems="center">
-        {/* Botón de actualización 
-        <Grid item xs={12} sm={1}>
-          <IconButton
-            onClick={handleRefresh}
-            color="primary"
-            aria-label="actualizar"
-            disabled={isLoading}
-          >
-            <RefreshIcon />
-          </IconButton>
-        </Grid>
-        */}
-
         {/* Búsqueda general */}
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={3}>
           <TextField
             label="Buscar"
             variant="outlined"
@@ -206,6 +247,23 @@ const DataView = ({ onRowClick, userRole, userName }) => {
             userRole={userRole}
             fileName={`reporte-${selectedYear}`}
           />
+        </Grid>
+        {/* Botón de actualización */}
+        <Grid item xs={12} sm={1}>
+          <IconButton
+            onClick={handleForceRefresh}
+            color="primary"
+            aria-label="actualizar"
+            disabled={isLoading}
+            title="Forzar actualización desde Firestore"
+          >
+            <RefreshIcon />
+          </IconButton>
+          {needsUpdate && (
+            <Typography variant="caption" color="error">
+              Actualización disponible
+            </Typography>
+          )}
         </Grid>
       </Grid>
 
@@ -282,6 +340,13 @@ const DataView = ({ onRowClick, userRole, userName }) => {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+
+      {usingCache && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          Mostrando datos en caché. Haz clic en el botón de actualización para
+          sincronizar con Firestore.
+        </Typography>
+      )}
     </Container>
   );
 };

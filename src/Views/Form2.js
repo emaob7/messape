@@ -26,6 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Icono para el botón de 
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import html2pdf from "html2pdf.js"; // Importar html2pdf
 import logo from "../assets/logo.png";
+import { openDB } from "idb";
 
 const Form2 = ({ selectedRow, userRole, userName2 }) => {
   const [formData, setFormData] = useState({
@@ -58,6 +59,17 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
   const [tabValue, setTabValue] = useState(0);
   const [folio, setFolio] = useState("01");
 
+  // Configuración de IndexedDB (fuera del componente)
+  const setupLocalDB = async () => {
+    return openDB("firestoreCache", 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains("documents")) {
+          db.createObjectStore("documents", { keyPath: ["year", "numero"] });
+        }
+      },
+    });
+  };
+
   // Cargar los datos seleccionados en el formulario
   useEffect(() => {
     if (selectedRow) {
@@ -80,7 +92,6 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
     setTabValue(newValue);
   };
 
-  // Función para guardar un registro
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -105,30 +116,54 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
     try {
       // Obtener el año actual
       const currentYear = new Date().getFullYear().toString();
+      const docNumero = Number(formData.numero); // Convertir a número
+
+      // Validar que el número sea válido
+      if (isNaN(docNumero)) {
+        throw new Error("El número de documento no es válido");
+      }
 
       // Crear objeto con todos los campos necesarios
       const dataToSave = {
         ...formData,
+        year: currentYear,
+        numero: docNumero, // Usar el número convertido
         userName: finalUserName,
-        userName2: userName2 || null, // Asegurar que userName2 tenga valor (aunque sea null)
+        userName2: userName2 || null,
         lastModified: new Date().toISOString(),
       };
 
-      // Eliminar campos undefined explícitamente
+      // Limpiar campos undefined
       Object.keys(dataToSave).forEach((key) => {
         if (dataToSave[key] === undefined) {
           dataToSave[key] = null;
         }
       });
 
-      // Guardar en colección con el año actual (ej: "2025")
-      await setDoc(doc(db, currentYear, formData.numero), dataToSave);
-      alert("Guardado exitoso");
+      // 1. Primero guardar en Firestore
+      await setDoc(
+        doc(db, currentYear, formData.numero.toString()),
+        dataToSave
+      );
+
+      // 2. Guardar en local
+      try {
+        const localDB = await setupLocalDB();
+        await localDB.put("documents", {
+          ...dataToSave,
+          numero: docNumero, // Asegurar que es número para IndexedDB
+        });
+      } catch (localError) {
+        console.error("Error guardando en caché local:", localError);
+      }
+
+      alert("Guardado exitoso en Firestore y caché local");
       limpiar();
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
   };
+
   // limpiar
 
   const limpiar = () => {
@@ -159,7 +194,6 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
     });
   };
 
-  // Función para eliminar un registro
   const handleDelete = async () => {
     try {
       if (!formData.numero) {
@@ -174,12 +208,25 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
         return;
       }
 
-      // Obtener el año actual
       const currentYear = new Date().getFullYear().toString();
+      const docNumero = Number(formData.numero); // Convertir a número
 
-      // Eliminar de la colección del año actual
-      await deleteDoc(doc(db, currentYear, formData.numero));
-      alert("Registro eliminado exitosamente");
+      if (isNaN(docNumero)) {
+        throw new Error("El número de documento no es válido");
+      }
+
+      // 1. Primero eliminar de Firestore
+      await deleteDoc(doc(db, currentYear, formData.numero.toString()));
+
+      // 2. Eliminar de local
+      try {
+        const localDB = await setupLocalDB();
+        await localDB.delete("documents", [currentYear, docNumero]);
+      } catch (localError) {
+        console.error("Error eliminando de caché local:", localError);
+      }
+
+      alert("Registro eliminado exitosamente de Firestore y caché local");
       limpiar();
     } catch (error) {
       console.error("Error al eliminar el registro: ", error.message);
@@ -343,27 +390,28 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
         </tr>
     </table>
 
-    <h3>Otras Dependencias</h3>
+   
     <table>
         <tr>
             <th>N°</th>
+            <th>Otras Dependencias</th>
             <th>Remitido para</th>
             <th>N° de remisión</th>
         </tr>
         <tr>
-            <td>1.</td><td></td><td></td>
+            <td>1.</td><td></td><td></td><td></td>
         </tr>
          <tr>
-            <td>2.</td><td></td><td></td>
+            <td>2.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>3.</td><td></td><td></td>
+            <td>3.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>4.</td><td></td><td></td>
+            <td>4.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>5.</td><td></td><td></td>
+            <td>5.</td><td></td><td></td><td></td>
         </tr>
     </table>
 

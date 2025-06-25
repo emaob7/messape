@@ -26,6 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Icono para el botón de 
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import html2pdf from "html2pdf.js"; // Importar html2pdf
 import logo from "../assets/logo.png";
+import { openDB } from "idb";
 
 const Form1 = ({ userRole, userName }) => {
   const [formData, setFormData] = useState({
@@ -58,6 +59,17 @@ const Form1 = ({ userRole, userName }) => {
   const [tabValue, setTabValue] = useState(0);
   const [folio, setFolio] = useState("01");
 
+  // Configuración de IndexedDB (debe estar fuera del componente)
+  const setupLocalDB = async () => {
+    return openDB("firestoreCache", 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains("documents")) {
+          db.createObjectStore("documents", { keyPath: ["year", "numero"] });
+        }
+      },
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
@@ -71,6 +83,7 @@ const Form1 = ({ userRole, userName }) => {
   };
 
   // Función para guardar un registro
+  // Dentro de tu componente Form1, modifica la función handleSubmit:
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -86,13 +99,23 @@ const Form1 = ({ userRole, userName }) => {
       const formDataWithUser = {
         ...formData,
         userName: userName || "Usuario desconocido", // Asegurar que siempre haya un valor
+        year: currentYear, // Añadir el año al documento
+        numero: Number(formData.numero), // Asegurar que numero sea un número
       };
 
-      // Guardar en una colección con el nombre del año actual (ej: "2025")
+      // 1. Primero guardar en Firestore
       await setDoc(doc(db, currentYear, formData.numero), formDataWithUser);
-      alert("Datos guardados exitosamente");
 
-      // Limpia el formulario
+      // 2. Solo si Firestore guarda correctamente, guardar en local
+      try {
+        const localDB = await setupLocalDB();
+        await localDB.put("documents", formDataWithUser);
+      } catch (localError) {
+        console.error("Error guardando en caché local:", localError);
+        // No mostramos alerta al usuario para no confundirle, ya que Firestore sí se guardó
+      }
+
+      alert("Datos guardados exitosamente en Firestore y caché local");
       limpiar();
     } catch (error) {
       console.error("Error al guardar los datos: ", error.message);
@@ -131,6 +154,7 @@ const Form1 = ({ userRole, userName }) => {
     });
   };
   // Función para eliminar un registro
+  // Modifica también la función handleDelete:
   const handleDelete = async () => {
     try {
       if (!formData.numero) {
@@ -142,17 +166,26 @@ const Form1 = ({ userRole, userName }) => {
         "¿Estás seguro de que quieres eliminar este registro?"
       );
       if (!confirmDelete) {
-        return; // Si el usuario cancela, se detiene la ejecución
+        return;
       }
 
-      // Obtener el año actual
       const currentYear = new Date().getFullYear().toString();
 
-      // Elimina el documento de Firestore usando el año actual como nombre de colección
+      // 1. Primero eliminar de Firestore
       await deleteDoc(doc(db, currentYear, formData.numero));
-      alert("Registro eliminado exitosamente");
 
-      // Limpia el formulario
+      // 2. Solo si Firestore elimina correctamente, eliminar de local
+      try {
+        const localDB = await setupLocalDB();
+        await localDB.delete("documents", [
+          currentYear,
+          Number(formData.numero),
+        ]);
+      } catch (localError) {
+        console.error("Error eliminando de caché local:", localError);
+      }
+
+      alert("Registro eliminado exitosamente de Firestore y caché local");
       limpiar();
     } catch (error) {
       console.error("Error al eliminar el registro: ", error.message);
@@ -315,27 +348,28 @@ const Form1 = ({ userRole, userName }) => {
         </tr>
     </table>
 
-    <h3>Otras Dependencias</h3>
+    
     <table>
         <tr>
             <th>N°</th>
+            <th>Otras Dependencias</th>
             <th>Remitido para</th>
             <th>N° de remisión</th>
         </tr>
         <tr>
-            <td>1.</td><td></td><td></td>
+            <td>1.</td><td></td><td></td><td></td>
         </tr>
          <tr>
-            <td>2.</td><td></td><td></td>
+            <td>2.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>3.</td><td></td><td></td>
+            <td>3.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>4.</td><td></td><td></td>
+            <td>4.</td><td></td><td></td><td></td>
             </tr>
              <tr>
-            <td>5.</td><td></td><td></td>
+            <td>5.</td><td></td><td></td><td></td>
         </tr>
     </table>
 
@@ -760,15 +794,6 @@ const Form1 = ({ userRole, userName }) => {
           >
             Limpiar
           </Button>
-          {userRole === "admin" && (
-            <Button
-              color="error" // Color rojo para indicar peligro
-              startIcon={<DeleteIcon />} // Icono de eliminar
-              onClick={handleDelete} // Función de eliminar
-            >
-              Eliminar
-            </Button>
-          )}
         </Box>
       </form>
     </Container>
