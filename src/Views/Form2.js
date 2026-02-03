@@ -52,6 +52,7 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
     dependencia: "",
     recepcion2: "",
     observacion: "",
+    folio: "",
     userName2: userName2, // o null
     confidencial: false, // Nuevo campo para indicar si es confidencial
   });
@@ -190,6 +191,7 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
       dependencia: "",
       recepcion2: "",
       observacion: "",
+      folio: "",
       confidencial: false, // Nuevo campo para indicar si es confidencial
     });
   };
@@ -327,7 +329,7 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
         <!-- Fila 4: Folio y celdas vacías -->
         <tr>
             <td class="bold">Folio:</td>
-            <td>${folio}</td>
+            <td>${formData.folio}</td>
             <td></td>
             <td></td>
         </tr>
@@ -544,8 +546,8 @@ const Form2 = ({ selectedRow, userRole, userName2 }) => {
               <TextField
                 label="Folio"
                 name="folio"
-                value={folio}
-                onChange={(e) => setFolio(e.target.value)} // Maneja el cambio directamente
+                value={formData.folio}
+                onChange={handleChange} // Maneja el cambio directamente
                 fullWidth
                 margin="normal"
               />

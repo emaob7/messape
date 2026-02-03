@@ -52,12 +52,12 @@ const Form1 = ({ userRole, userName }) => {
     dependencia: "",
     recepcion2: "",
     observacion: "",
+    folio: "",
     confidencial: false, // Nuevo campo para indicar si es confidencial
     userName: userName || "",
   });
 
   const [tabValue, setTabValue] = useState(0);
-  const [folio, setFolio] = useState("01");
 
   // Configuración de IndexedDB (debe estar fuera del componente)
   const setupLocalDB = async () => {
@@ -149,6 +149,7 @@ const Form1 = ({ userRole, userName }) => {
       dependencia: "",
       recepcion2: "",
       observacion: "",
+      folio: "",
       confidencial: false, // Nuevo campo para indicar si es confidencial
       userName: userName || "",
     });
@@ -285,7 +286,7 @@ const Form1 = ({ userRole, userName }) => {
         <!-- Fila 4: Folio y celdas vacías -->
         <tr>
             <td class="bold">Folio:</td>
-            <td>${folio}</td>
+            <td>${formData.folio}</td>
             <td></td>
             <td></td>
         </tr>
@@ -504,8 +505,8 @@ const Form1 = ({ userRole, userName }) => {
               <TextField
                 label="Folio"
                 name="folio"
-                value={folio}
-                onChange={(e) => setFolio(e.target.value)} // Maneja el cambio directamente
+                value={formData.folio}
+                onChange={handleChange} // Maneja el cambio directamente
                 fullWidth
                 margin="normal"
               />

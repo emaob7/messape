@@ -48,7 +48,7 @@ const DataView = ({ onRowClick, userRole, userName }) => {
   const [yearFilter, setYearFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [selectedYear, setSelectedYear] = useState(
-    new Date().getFullYear().toString()
+    new Date().getFullYear().toString(),
   );
   const [isLoading, setIsLoading] = useState(false);
   const [usingCache, setUsingCache] = useState(true);
@@ -61,7 +61,7 @@ const DataView = ({ onRowClick, userRole, userName }) => {
         const localDB = await setupLocalDB();
         const allCachedData = await localDB.getAll("documents");
         const yearData = allCachedData.filter(
-          (doc) => doc.year === selectedYear
+          (doc) => doc.year === selectedYear,
         );
 
         setLocalData(yearData);
@@ -131,7 +131,7 @@ const DataView = ({ onRowClick, userRole, userName }) => {
     const matchesSearch =
       searchTerm === "" ||
       Object.values(row).some((value) =>
-        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        String(value).toLowerCase().includes(searchTerm.toLowerCase()),
       );
 
     const matchesYear =
@@ -154,10 +154,13 @@ const DataView = ({ onRowClick, userRole, userName }) => {
   });
 
   // Calcular los datos paginados
-  const sortedData = filteredData.sort((a, b) => b.numero - a.numero);
+  const sortedData = [...filteredData].sort(
+    (a, b) => new Date(b.fecha) - new Date(a.fecha),
+  );
+
   const paginatedData = sortedData.slice(
     page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
+    page * rowsPerPage + rowsPerPage,
   );
 
   const handleChangePage = (event, newPage) => {
@@ -236,16 +239,25 @@ const DataView = ({ onRowClick, userRole, userName }) => {
 
         {/* Botón exportar */}
         <Grid item xs={12} sm={2}>
+          {/**  
+          <ExcelExportButton
+            localData={localData}
+            fileName={`datos-locales-${selectedYear}`}
+            useLocalData={true}
+          />
+          */}
           <ExcelExportButton
             data={filteredData}
-            fileName={`datos-${selectedYear}`}
+            fileName={`datos-actuales-${selectedYear}`}
+            useLocalData={false}
           />
         </Grid>
         <Grid item xs={12} sm={2}>
           <PDFExportButton
             data={filteredData}
             userRole={userRole}
-            fileName={`reporte-${selectedYear}`}
+            fileName={`reporte-actual-${selectedYear}`}
+            useLocalData={false}
           />
         </Grid>
         {/* Botón de actualización */}
@@ -303,10 +315,10 @@ const DataView = ({ onRowClick, userRole, userName }) => {
                     !row.seguimiento || row.seguimiento === "pendiente"
                       ? "4px solid #FFA726"
                       : row.seguimiento === "finalizado"
-                      ? "4px solid #66BB6A"
-                      : row.confidencial
-                      ? "4px solid #42A5F5"
-                      : "none",
+                        ? "4px solid #66BB6A"
+                        : row.confidencial
+                          ? "4px solid #42A5F5"
+                          : "none",
                   backgroundColor: row.confidencial ? "#b3e5fc" : "inherit",
                 }}
               >
